@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+readonly PHP="docker-compose exec -T php"
+readonly PHP_CS_FIXER="./vendor/bin/php-cs-fixer"
+
+if [[ ! -f "$PHP_CS_FIXER" ]]; then
+  echo "$PHP_CS_FIXER not found."
+  exit 1
+fi
+
+readonly CHANGED_FILES=$(git diff --staged --name-only --diff-filter=ACMRTUXB)
+
+if [[ ! -z "$CHANGED_FILES" ]]; then
+
+  readonly PHP_CS_FIXER_CONFIG=".php-cs-fixer.php"
+
+  if [[ ! -f $PHP_CS_FIXER_CONFIG ]]; then
+    echo "$PHP_CS_FIXER_CONFIG does not exist."
+    exit 1
+  fi
+
+  echo "Running code-style fixer."
+
+  $PHP $PHP_CS_FIXER fix \
+    --config=$PHP_CS_FIXER_CONFIG --using-cache=no \
+    --path-mode=intersection --diff $CHANGED_FILES
+
+  git add $CHANGED_FILES &> /dev/null
+
+else
+  echo "Git staging area is empty."
+fi
