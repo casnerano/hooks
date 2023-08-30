@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+readonly PROJECT_HOST_NAME="" 
+ 
+readonly GRAFANA_HOST="" 
+readonly GRAFANA_API_TOKEN="" 
+ 
+readonly CURRENT_BRANCH=$(git symbolic-ref --short HEAD) 
+readonly CURRECT_MERGE_LOG=$(git log HEAD@{1}..HEAD --oneline | sed 's/.*/<li>&<\/li>/' | tr -d '\n') 
+ 
+if [ "$CURRENT_BRANCH" = "master" ]; then 
+  curl \ 
+    --silent \ 
+    --output /dev/null \ 
+    --location "${GRAFANA_HOST}/api/annotations" \ 
+    --header "Content-Type: application/json" \ 
+    --header "Authorization: Bearer ${GRAFANA_API_TOKEN}" \ 
+    --data "{ 
+        \"text\": \"<b>Uploaded to the master branch</b>:<br /><ul>${CURRECT_MERGE_LOG}</ul>\", 
+        \"tags\": [\"deploy\",  \"host:${PROJECT_HOST_NAME}\"] 
+    }" 
+
+  echo "Deploy annotation sent to Grafana" 
+fi
